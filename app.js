@@ -1,5 +1,6 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var timeOffRequestAPI = require('./api/timeOffRequest');
 var inMemoryStorage = new builder.MemoryBotStorage();
 // Setup Restify Server
 var server = restify.createServer();
@@ -109,6 +110,15 @@ bot.dialog('getPayCorOptions', [
 
 bot.dialog('getInsideOptions', [
     function (session, region) {
+
+        timeOffRequestAPI.getData(function(data) {
+            let balances = JSON.parse(data);
+            for(let item of balances.balances){
+                builder.Prompts.text(session, item.benefitCode + ' - ' + item.availableBalance);
+            }
+        });
+
+        
         builder.Prompts.choice(session, "Please select the option below.?", absenceManagementDetails, { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
