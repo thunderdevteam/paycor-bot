@@ -4,7 +4,7 @@ var inMemoryStorage = new builder.MemoryBotStorage();
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+    console.log('%s listening to %s', server.name, server.url);
 });
 
 // Create chat connector for communicating with the Bot Framework Service
@@ -16,12 +16,32 @@ var connector = new builder.ChatConnector({
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector, [
+    // function (session) {
+    //     session.send("Welcome to the dinner reservation.");
+    //     builder.Prompts.time(session, "Please provide a reservation date and time (e.g.: June 6th at 5pm)");
+    // },
+    // function (session, results) {
+    //     session.dialogData.reservationDate = builder.EntityRecognizer.resolveTime([results.response]);
+    //     builder.Prompts.text(session, "How many people are in your party?");
+    // },
+    // function (session, results) {
+    //     session.dialogData.partySize = results.response;
+    //     builder.Prompts.text(session, "Whose name will this reservation be under?");
+    // },
+    // function (session, results) {
+    //     session.dialogData.reservationName = results.response;
+
+    //     // Process request and display reservation details
+    //     session.send(`Reservation confirmed. Reservation details: <br/>Date/Time: ${session.dialogData.reservationDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.reservationName}`);
+    //     session.endDialog();
+    // }
     function (session) {
-        session.send("Welcome to the dinner reservation.");
-        builder.Prompts.time(session, "Please provide a reservation date and time (e.g.: June 6th at 5pm)");
+        session.send("Hi, Welcome to Paycor. Please click on below options that i can help with");
+        session.beginDialog('getPayCorOptions');
+        //builder.Prompts.time(session, "dfghdfh");
     },
     function (session, results) {
-        session.dialogData.reservationDate = builder.EntityRecognizer.resolveTime([results.response]);
+        session.dialogData.reservationDate = results.response;
         builder.Prompts.text(session, "How many people are in your party?");
     },
     function (session, results) {
@@ -35,13 +55,78 @@ var bot = new builder.UniversalBot(connector, [
         session.send(`Reservation confirmed. Reservation details: <br/>Date/Time: ${session.dialogData.reservationDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.reservationName}`);
         session.endDialog();
     }
+
 ]).set('storage', inMemoryStorage);
+
+
+
+
+var paycorOptions = {
+    "Absence Management": {
+        "My Balance": {
+            balance: 56,
+            taken: 25
+        },
+        "My Schedule Hours": {},
+        "Create Time Off": {},
+        "Time Off Details": {}
+    },
+    "Time Card": {
+        units: 100,
+        total: "$3,000"
+    },
+    "Holiday Details": {
+        units: 300,
+        total: "$9,000"
+    }
+};
+
+var absenceManagementDetails = {
+    "My Balance": {
+        balance: 56,
+        taken: 25
+    },
+    "My Schedule Hours": {},
+    "Create Time Off": {},
+    "Time Off Details": {}
+};
+
+bot.dialog('getPayCorOptions', [
+    function (session) {
+        builder.Prompts.choice(session, "Please select the app below.?", paycorOptions, { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        if (results.response) {
+            var region = paycorOptions[results.response.entity];
+            //builder.Prompts.choice(session, "Please select the option below.?", region, { listStyle: builder.ListStyle.button }); 
+            session.beginDialog('getInsideOptions', region);
+            //session.send(`You selected ${region.units} units for a total of ${region.total}.`); 
+        } else {
+            session.send("OK");
+        }
+    }
+]);
+
+bot.dialog('getInsideOptions', [
+    function (session, region) {
+        builder.Prompts.choice(session, "Please select the option below.?", absenceManagementDetails, { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        if (results.response) {
+            var region1 = absenceManagementDetails[results.response.entity];
+            session.send(`You have ${region1.balance} Hours, and you taken ${region1.taken} Hours.`);
+        } else {
+            session.send("OK");
+        }
+    }
+]);
+
 
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
 // var bot = new builder.UniversalBot(connector, [
 //     function (session) {
 //         session.send("You said: %s", session.message.text); 
-           
+
 //     }
 // ]).set('storage', inMemoryStorage); // Register in-memory storage 
 
@@ -211,4 +296,4 @@ bot.dialog('askForReserverName', [
         session.endDialogWithResult(results);
     }
 ]);
-*/ 
+*/
