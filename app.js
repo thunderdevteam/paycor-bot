@@ -137,7 +137,7 @@ bot.dialog('getHolidayDetailsOptions', [
 bot.dialog('getMyBalanceOptions', [
     function (session) {
         session.send("getMyBalanceOptions called!!");
-        timeOffRequestAPI.getData(function (data) {
+        timeOffRequestAPI.getData(clientId, employeeId, function (data) {
             let balances = JSON.parse(data);
             for (let item of balances.balances) {
                 session.send(item.benefitCode + ' - ' + item.availableBalance);
@@ -149,7 +149,7 @@ bot.dialog('getMyBalanceOptions', [
 bot.dialog('getMyScheduleHoursOptions', [
     function (session) {
         session.send("getMyScheduleHoursOptions called!!");
-        timeOffRequestAPI.getData(function (data) {
+        timeOffRequestAPI.getData(clientId, employeeId, function (data) {
             let balances = JSON.parse(data);
             for (let item of balances.balances) {
                 session.send(item.benefitCode + ' - ' + item.availableBalance);
@@ -172,12 +172,10 @@ bot.dialog('getTimeOffDetailsOptions', [
 ]);
 bot.dialog('getMyTimeCardDetailsOptions', [
     function (session) {
-        session.send("getMyTimeCardDetailsOptions called!!");
-        timeOffRequestAPI.getData(function (data) {
-            let balances = JSON.parse(data);
-            for (let item of balances.balances) {
-                session.send(item.benefitCode + ' - ' + item.availableBalance);
-            }
+        timeOffRequestAPI.getTimeCardDetails(clientId, employeeId, '08/29/2018', function (data) {
+    
+            console.log(data);
+            
         });
         session.endConversation();
     }
@@ -185,11 +183,10 @@ bot.dialog('getMyTimeCardDetailsOptions', [
 bot.dialog('getMyExceptionDetailsOptions', [
     function (session) {
         session.send("getMyExceptionDetailsOptions called!!");
-        timeOffRequestAPI.getData(function (data) {
-            let balances = JSON.parse(data);
-            for (let item of balances.balances) {
-                session.send(item.benefitCode + ' - ' + item.availableBalance);
-            }
+        timeOffRequestAPI.getExecptions(clientId, employeeId, null, function (data) {
+            //let balances = JSON.parse(data);
+            console.log(data);
+            
         });
         session.endConversation();
     }
