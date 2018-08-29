@@ -1,11 +1,11 @@
 {
-    "name": "PaycorBotDemo",
+    "name": "PaycorBot",
     "description": "",
     "secretKey": "",
     "services": [
         {
             "appId": "",
-            "id": "cf172950-aa74-11e8-a029-c9658f8193a1",
+            "id": "cbbfeac0-aaf2-11e8-a029-c9658f8193a1",
             "type": "endpoint",
             "appPassword": "",
             "endpoint": "http://localhost:3978/api/messages",
