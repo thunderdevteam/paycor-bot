@@ -87,7 +87,7 @@ var absenceManagementDetails = {
         balance: 56,
         taken: 25
     },
-    "My Schedule Hours": {},
+    "Taken Hours": {},
     "Create Time Off": {},
     "Time Off Details": {}
 };
@@ -110,21 +110,24 @@ bot.dialog('getPayCorOptions', [
 
 bot.dialog('getInsideOptions', [
     function (session, region) {
-
-        timeOffRequestAPI.getData(function(data) {
-            let balances = JSON.parse(data);
-            for(let item of balances.balances){
-                builder.Prompts.text(session, item.benefitCode + ' - ' + item.availableBalance);
-            }
-        });
-
-        
         builder.Prompts.choice(session, "Please select the option below.?", absenceManagementDetails, { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         if (results.response) {
-            var region1 = absenceManagementDetails[results.response.entity];
-            session.send(`You have ${region1.balance} Hours, and you taken ${region1.taken} Hours.`);
+            timeOffRequestAPI.getData(function(data) {
+                let balances = JSON.parse(data);
+                if(results.response.entity === 'My Balance'){
+                    for(let item of balances.balances){
+                        builder.Prompts.text(session, item.benefitCode + ' - ' + item.availableBalance);
+                    }
+                }
+
+                if(results.response.entity === 'Taken Hours'){
+                    for(let item of balances.balances){
+                        builder.Prompts.text(session, item.benefitCode + ' - ' + item.approvedHours);
+                    }
+                }
+            });
         } else {
             session.send("OK");
         }
