@@ -2,6 +2,7 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var timeOffRequestAPI = require('./api/timeOffRequest');
 var inMemoryStorage = new builder.MemoryBotStorage();
+
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
@@ -30,51 +31,51 @@ var timeCardOptions = {
     "My Time Card details": {},
     "Exception Details": {}
 };
+var clientId;
+var employeeId;
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.send("Hi, Welcome to Paycor Bot.");
+
+        builder.Prompts.text(session,"Hi, Welcome to Paycor Bot.<br />Please provide ClientId, EmployeeId before proceed further(eg clientId,EmployeeId)");
+    },
+    function (session, results) {
+        var resp = results.response.split(',');
+        clientId = resp[0];
+        employeeId = resp[1];
         session.beginDialog('getPayCorOptions');
     },
     function (session, results) {
         session.dialogData.PayCorOption = results.response.entity;
-        session.send(`you have selected: ${session.dialogData.PayCorOption}`);
-        if(session.dialogData.PayCorOption=="Absence Management")
-        {
+//        session.send(`you have selected: ${session.dialogData.PayCorOption}`);
+        if (session.dialogData.PayCorOption == "Absence Management") {
             session.beginDialog('getAbsenceManagementOptions');
         }
-        if(session.dialogData.PayCorOption=="Time Card")
-        {
+        if (session.dialogData.PayCorOption == "Time Card") {
             session.beginDialog('getTimeCardOptions');
         }
-        if(session.dialogData.PayCorOption=="Holiday Details")
-        {
+        if (session.dialogData.PayCorOption == "Holiday Details") {
             session.beginDialog('getHolidayDetailsOptions');
         }
     },
     function (session, results) {
         session.dialogData.PayCorSubOption = results.response.entity;
 
-        session.send(`you have selected: ${session.dialogData.PayCorSubOption}`);
-        if(session.dialogData.PayCorSubOption=="My Balance")
-        {
+        //session.send(`you have selected: ${session.dialogData.PayCorSubOption}`);
+        if (session.dialogData.PayCorSubOption == "My Balance") {
             session.beginDialog('getMyBalanceOptions');
         }
-        if(session.dialogData.PayCorSubOption=="My Schedule Hours")
-        {
+        if (session.dialogData.PayCorSubOption == "My Schedule Hours") {
             session.beginDialog('getMyScheduleHoursOptions');
         }
-        if(session.dialogData.PayCorSubOption=="Time Off Details")
-        {
+        if (session.dialogData.PayCorSubOption == "Time Off Details") {
             session.beginDialog('getTimeOffDetailsOptions');
         }
-        if(session.dialogData.PayCorSubOption=="My Time Card details")
-        {
+        if (session.dialogData.PayCorSubOption == "My Time Card details") {
             session.beginDialog('getMyTimeCardDetailsOptions');
         }
-        if(session.dialogData.PayCorSubOption=="Exception Details")
-        {
+        if (session.dialogData.PayCorSubOption == "Exception Details") {
             session.beginDialog('getMyExceptionDetailsOptions');
         }
         // timeOffRequestAPI.getData(function(data) {
@@ -91,14 +92,14 @@ var bot = new builder.UniversalBot(connector, [
 bot.dialog('help', function (session, args, next) {
     session.endConversation("Please say 'next' to go to Main Options..");
 })
-.triggerAction({
-    matches: /^help$/i,
-    // onSelectAction: (session, args, next) => {
-    //     // Add the help dialog to the dialog stack 
-    //     // (override the default behavior of replacing the stack)
-    //     session.beginDialog(args.action, args);
-    // }
-});
+    .triggerAction({
+        matches: /^help$/i,
+        // onSelectAction: (session, args, next) => {
+        //     // Add the help dialog to the dialog stack 
+        //     // (override the default behavior of replacing the stack)
+        //     session.beginDialog(args.action, args);
+        // }
+    });
 /********* */
 
 bot.dialog('getPayCorOptions', [
@@ -136,9 +137,9 @@ bot.dialog('getHolidayDetailsOptions', [
 bot.dialog('getMyBalanceOptions', [
     function (session) {
         session.send("getMyBalanceOptions called!!");
-        timeOffRequestAPI.getData(function(data) {
+        timeOffRequestAPI.getData(function (data) {
             let balances = JSON.parse(data);
-            for(let item of balances.balances){
+            for (let item of balances.balances) {
                 session.send(item.benefitCode + ' - ' + item.availableBalance);
             }
         });
@@ -148,9 +149,9 @@ bot.dialog('getMyBalanceOptions', [
 bot.dialog('getMyScheduleHoursOptions', [
     function (session) {
         session.send("getMyScheduleHoursOptions called!!");
-        timeOffRequestAPI.getData(function(data) {
+        timeOffRequestAPI.getData(function (data) {
             let balances = JSON.parse(data);
-            for(let item of balances.balances){
+            for (let item of balances.balances) {
                 session.send(item.benefitCode + ' - ' + item.availableBalance);
             }
         });
@@ -160,9 +161,9 @@ bot.dialog('getMyScheduleHoursOptions', [
 bot.dialog('getTimeOffDetailsOptions', [
     function (session) {
         session.send("getTimeOffDetailsOptions called!!");
-        timeOffRequestAPI.getData(function(data) {
+        timeOffRequestAPI.getData(function (data) {
             let balances = JSON.parse(data);
-            for(let item of balances.balances){
+            for (let item of balances.balances) {
                 session.send(item.benefitCode + ' - ' + item.availableBalance);
             }
         });
@@ -172,9 +173,9 @@ bot.dialog('getTimeOffDetailsOptions', [
 bot.dialog('getMyTimeCardDetailsOptions', [
     function (session) {
         session.send("getMyTimeCardDetailsOptions called!!");
-        timeOffRequestAPI.getData(function(data) {
+        timeOffRequestAPI.getData(function (data) {
             let balances = JSON.parse(data);
-            for(let item of balances.balances){
+            for (let item of balances.balances) {
                 session.send(item.benefitCode + ' - ' + item.availableBalance);
             }
         });
@@ -184,9 +185,9 @@ bot.dialog('getMyTimeCardDetailsOptions', [
 bot.dialog('getMyExceptionDetailsOptions', [
     function (session) {
         session.send("getMyExceptionDetailsOptions called!!");
-        timeOffRequestAPI.getData(function(data) {
+        timeOffRequestAPI.getData(function (data) {
             let balances = JSON.parse(data);
-            for(let item of balances.balances){
+            for (let item of balances.balances) {
                 session.send(item.benefitCode + ' - ' + item.availableBalance);
             }
         });
@@ -203,7 +204,7 @@ bot.dialog('getMyExceptionDetailsOptions', [
 //             }
 //         });
 
-        
+
 //         builder.Prompts.choice(session, "Please select the option below.?", absenceManagementDetails, { listStyle: builder.ListStyle.button });
 //     },
 //     function (session, results) {
