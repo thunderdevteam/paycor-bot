@@ -168,12 +168,17 @@ bot.dialog('getMyScheduleHoursOptions', [
 ]);
 bot.dialog('getTimeOffDetailsOptions', [
     function (session) {
-        session.send("getTimeOffDetailsOptions called!!");
-        timeOffRequestAPI.getData(function (data) {
-            let balances = JSON.parse(data);
-            for (let item of balances.balances) {
-                session.send(item.benefitCode + ' - ' + item.availableBalance);
+        timeOffRequestAPI.getTimeOffDetails(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
+            let TimeOffDetails = JSON.parse(data);
+            var msg = "Below are your Time Off Details:<br \>";
+            let maxCount = 5;
+            for (let item of TimeOffDetails) {
+                if (maxCount == 0)
+                    break;
+                msg = msg + "Time Off From:" + item.fromDate + " To: " + item.toDate + ",  Total Hours:" + item.totalHours + ", benefitCode:"+item.benefitCode+"<br \>";
+                maxCount = maxCount - 1;
             }
+            session.send(msg);
         });
         session.endConversation();
     }

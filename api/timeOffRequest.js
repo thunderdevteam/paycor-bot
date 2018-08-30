@@ -53,7 +53,18 @@ var getHolidays = (clientId, EmployeeId, startDate, endDate, callback) => {
         callback(body);
     }); 
 }
-
+var getTimeOffDetails = (clientId, EmployeeId, startDate, endDate, callback) => {
+    request({
+        method: 'GET',
+        url: `http://localhost/absencemanagementservice/v1/clients/${clientId}/employees/${EmployeeId}/timeOffRequests?fromDate=${startDate}&toDate=${endDate}`,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        }
+    }, function(error, res, body){
+        callback(body);
+    }); 
+}
 
 var getExecptions = (clientId, employeeId, startDate, callback) => {
 
@@ -85,5 +96,6 @@ module.exports.getData = getData;
 module.exports.getTimeCardDetails = getTimeCardDetails;
 module.exports.getHolidays = getHolidays;
 module.exports.getExecptions = getExecptions;
+module.exports.getTimeOffDetails = getTimeOffDetails;
 
 return module.exports;
