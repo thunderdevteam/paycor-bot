@@ -1,6 +1,7 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var timeOffRequestAPI = require('./api/timeOffRequest');
+var Util = require('./api/Util'); 
 var inMemoryStorage = new builder.MemoryBotStorage();
 
 // Setup Restify Server
@@ -16,7 +17,7 @@ var connector = new builder.ChatConnector({
 });
 
 var paycorOptions = {
-    "Absence Management": {},
+    "Time Off Manager": {},
     "Time Card": {},
     "Holiday Details": {}
 };
@@ -49,7 +50,7 @@ var bot = new builder.UniversalBot(connector, [
     },
     function (session, results) {
         session.dialogData.PayCorOption = results.response.entity;
-        if (session.dialogData.PayCorOption == "Absence Management") {
+        if (session.dialogData.PayCorOption == "Time Off Manager") {
             session.beginDialog('getAbsenceManagementOptions');
         }
         if (session.dialogData.PayCorOption == "Time Card") {
@@ -92,7 +93,7 @@ var bot = new builder.UniversalBot(connector, [
     function (session, results) {
         var timeoff = results.response;
         if (timeoff.includes("timeoffid"))  {
-            session.send(`Time Off created successfully in Absense Managment<br/> But User(12345) don't have '517-AddEditDeleteHours' privilage to update the time card.`)
+            session.send(`Time Off created successfully in Absense Managment<br/> But User(207317669152124) don't have '517-AddEditDeleteHours' privilage to update the time card.`)
             builder.Prompts.text(session,"Do you want create bug in TFS?")
         }
 
@@ -100,7 +101,7 @@ var bot = new builder.UniversalBot(connector, [
     function (session, results) {
         var timeoff = results.response;
         if (timeoff.includes("Yes"))  {
-            session.endConversation(`Thank you so much!! Bug has been created in TFS with ID:"BUG:4324534".`)
+            session.endConversation(`Thank you so much!! Bug has been created in TFS with ID:"Bug 774100".`)
         }
 
     }
@@ -149,12 +150,12 @@ bot.dialog('getHolidayDetailsOptions', [
         timeOffRequestAPI.getHolidays(clientId, employeeId, '08/30/2018', '09/01/2018', function (data) {
             let scheduleHours = JSON.parse(data);
             console.log(scheduleHours);
-            var msg = "Below are your Holiday Details:<br \>";
+            var msg = "User has Holidays on below Dates:<br /> ";
             let maxCount = 5;
             for (let item of scheduleHours) {
                 if (maxCount == 0)
                     break;
-                msg = msg + "Date:" + item.StartDateTime + ",  Total Hours:8.00<br \>";
+                msg = msg + "Date: " + Util.formatDate(new Date(item.StartDateTime))+"<br />";
                 maxCount = maxCount - 1;
             }
             session.send(msg);
@@ -185,7 +186,7 @@ bot.dialog('getMyScheduleHoursOptions', [
             for (let item of scheduleHours) {
                 if (maxCount == 0)
                     break;
-                msg = msg + "Date:" + item.StartDateTime + ", Shift:" + item.DisplayString + " Total Hours:" + item.TotalDisplay + "<br \>";
+                msg = msg + "Date:" + Util.formatDate(new Date(item.StartDateTime)) + ", Shift:" + item.DisplayString + " Total Hours:" + item.TotalDisplay + "<br \>";
                 maxCount = maxCount - 1;
             }
             session.send(msg);
@@ -202,7 +203,7 @@ bot.dialog('getTimeOffDetailsOptions', [
             for (let item of TimeOffDetails) {
                 if (maxCount == 0)
                     break;
-                msg = msg + "Time Off From:" + item.fromDate + " To: " + item.toDate + ",  Total Hours:" + item.totalHours + ", benefitCode:" + item.benefitCode + "<br \>";
+                msg = msg + "Time Off From:" + Util.formatDate(new Date(item.fromDate)) + " To: " + Util.formatDate(new Date(item.toDate)) + ",  Total Hours:" + item.totalHours + ", benefitCode:" + item.benefitCode + "<br \>";
                 maxCount = maxCount - 1;
             }
             session.send(msg);
@@ -225,7 +226,7 @@ bot.dialog('getMyTimeCardDetailsOptions', [
                     let punchPairList = item.PunchPairList[0];
                     if (maxCount == 0)
                         break;
-                    msg = msg + "Display Date:" + item.DisplayDate + ", InPunch : " + punchPairList.InPunchDateTime + ",  OutPunch:" + punchPairList.OutPunchDateTime + ", Total Hours:" + punchPairList.Hours[0].TotalString + "<br \>";
+                    msg = msg + "Display Date:" + item.DisplayDate + ", <br />InPunch : " + punchPairList.InPunchDateTime + ", <br /> OutPunch:" + punchPairList.OutPunchDateTime + ", <br />Total Hours:" + punchPairList.Hours[0].TotalString + "<br \>";
                     maxCount = maxCount - 1;
                 }
             }

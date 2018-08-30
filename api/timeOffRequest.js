@@ -1,6 +1,6 @@
 var request = require('request');
 
-const token = 'uUMd-8TqzcoIGOaMgvUT0Ff9EhtW-VeMHiAexEl6YzYR0Gn1uameZRpYgCM2DYF_h_-Vpm6YQze9EA4ck2qKK5Kn9Bg7nYrBgcaeiuh0Nm8sYtdpLjBM7q_id_qlJderQfgg9CCBTOFXkLsVLzzO320CyVXky93D-ogTUbC3DLsGZzha';
+const token = 'MEnXsWw2wL_JTjywfpUHZmoDDWfrqJRLBu04iJVAeIY6bfWLnM72_cC8o6usDM4-GZEe5bywiJklAd47n905ol-oktPvysaa9agCIJDDcNZSeamxruyOAQ6KxGZVurVm093WzSymESmbQIBVJb2qYkKBpudhEpUBbhUbEQt73_nkq3VR';
 //"/v1/clientDetail?clientId=" + clientId + '&employeeId=' + employeeId
 var getData = (clientId, EmployeeId, callback) => {
     request({
