@@ -37,7 +37,7 @@ var employeeId;
 server.post('/api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        builder.Prompts.text(session,"Hi, Welcome to Paycor Bot.<br />Please provide ClientId, EmployeeId before proceed further(eg clientId,EmployeeId)");
+        builder.Prompts.text(session, "Hi, Welcome to Paycor Bot.<br />Please provide ClientId, EmployeeId before proceed further(eg clientId,EmployeeId)");
     },
     function (session, results) {
         var resp = results.response.split(',');
@@ -65,7 +65,7 @@ var bot = new builder.UniversalBot(connector, [
         if (session.dialogData.PayCorSubOption == "Create Time Off") {
             session.endConversation(`Please click on below link Record Absence:<br\>[Record Absence](http://localhost/absencemanagement/managetimeoff.html?screen=accrualactivity&clientId=${clientId}&empid=${employeeId})`)
         }
-        
+
         if (session.dialogData.PayCorSubOption == "My Schedule Hours") {
             session.beginDialog('getMyScheduleHoursOptions');
         }
@@ -138,9 +138,9 @@ bot.dialog('getMyBalanceOptions', [
     function (session) {
         timeOffRequestAPI.getData(clientId, employeeId, function (data) {
             let balances = JSON.parse(data);
-            var msg="Below are your balacnce:<br \>";
+            var msg = "Below are your balacnce:<br \>";
             for (let item of balances.balances) {
-                msg=msg+item.benefitCode + ' - ' + item.availableBalance+"<br \>";
+                msg = msg + item.benefitCode + ' - ' + item.availableBalance + "<br \>";
             }
             session.send(msg);
         });
@@ -150,11 +150,18 @@ bot.dialog('getMyBalanceOptions', [
 bot.dialog('getMyScheduleHoursOptions', [
     function (session) {
         session.send("getMyScheduleHoursOptions called!!");
-        timeOffRequestAPI.getData(clientId, employeeId, function (data) {
-            let balances = JSON.parse(data);
-            for (let item of balances.balances) {
-                session.send(item.benefitCode + ' - ' + item.availableBalance);
+        timeOffRequestAPI.getHolidays(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
+            let scheduleHours = JSON.parse(data);
+            console.log(scheduleHours);
+            var msg = "Below are your balacnce:<br \>";
+            let maxCount = 5;
+            for (let item of scheduleHours) {
+                if (maxCount == 0)
+                    break;
+                msg = msg + "Date:" + item.DisplayDate + ",  Total Hours:7.56<br \>";
+                maxCount = maxCount - 1;
             }
+            session.send(msg);
         });
         session.endConversation();
     }
@@ -174,9 +181,9 @@ bot.dialog('getTimeOffDetailsOptions', [
 bot.dialog('getMyTimeCardDetailsOptions', [
     function (session) {
         timeOffRequestAPI.getTimeCardDetails(clientId, employeeId, '08/29/2018', function (data) {
-    
+
             console.log(data);
-            
+
         });
         session.endConversation();
     }
@@ -187,7 +194,7 @@ bot.dialog('getMyExceptionDetailsOptions', [
         timeOffRequestAPI.getExecptions(clientId, employeeId, null, function (data) {
             //let balances = JSON.parse(data);
             console.log(data);
-            
+
         });
         session.endConversation();
     }
@@ -197,7 +204,7 @@ bot.dialog('getMyExceptionDetailsOptions', [
 // var bot = new builder.UniversalBot(connector, [
 //     function (session) {
 //         session.send("You said: %s", session.message.text); 
-           
+
 //     }
 // ]).set('storage', inMemoryStorage); // Register in-memory storage 
 
@@ -367,4 +374,4 @@ bot.dialog('askForReserverName', [
         session.endDialogWithResult(results);
     }
 ]);
-*/ 
+*/
