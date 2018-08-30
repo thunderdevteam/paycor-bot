@@ -175,7 +175,7 @@ bot.dialog('getTimeOffDetailsOptions', [
             for (let item of TimeOffDetails) {
                 if (maxCount == 0)
                     break;
-                msg = msg + "Time Off From:" + item.fromDate + " To: " + item.toDate + ",  Total Hours:" + item.totalHours + ", benefitCode:"+item.benefitCode+"<br \>";
+                msg = msg + "Time Off From:" + item.fromDate + " To: " + item.toDate + ",  Total Hours:" + item.totalHours + ", benefitCode:" + item.benefitCode + "<br \>";
                 maxCount = maxCount - 1;
             }
             session.send(msg);
@@ -188,7 +188,21 @@ bot.dialog('getMyTimeCardDetailsOptions', [
         timeOffRequestAPI.getTimeCardDetails(clientId, employeeId, '08/29/2018', function (data) {
 
             console.log(data);
-
+            let timeCardDetails = JSON.parse(data);
+            var msg = "Below are your Time Card Details:<br \>";
+            let maxCount = 5;
+            let timeCardDays=timeCardDetails.TimeCardDays;
+            console.log(timeCardDays);
+            for (let item of timeCardDays) {
+                 if (item.DisplayDate == '08/29/2018') {
+                     let punchPairList=item.PunchPairList[0];
+                    if (maxCount == 0)
+                        break;
+                    msg = msg + "Display Date:" + item.DisplayDate + ", InPunch : " + punchPairList.InPunchDateTime + ",  OutPunch:" + punchPairList.OutPunchDateTime + ", Total Hours:" + punchPairList.Hours[0].TotalString + "<br \>";
+                    maxCount = maxCount - 1;
+                }
+            }
+            session.send(msg);
         });
         session.endConversation();
     }
