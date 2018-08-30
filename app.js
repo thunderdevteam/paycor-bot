@@ -22,13 +22,13 @@ var paycorOptions = {
 };
 
 var absenceManagementOptions = {
-    "My Balance": {},
-    "My Schedule Hours": {},
+    "PTO Balance": {},
+    "Schedule Hours": {},
     "Create Time Off": {},
     "Time Off Details": {}
 };
 var timeCardOptions = {
-    "My Time Card details": {},
+    "Time Card details": {},
     "Exception Details": {}
 };
 var clientId;
@@ -59,20 +59,20 @@ var bot = new builder.UniversalBot(connector, [
     },
     function (session, results) {
         session.dialogData.PayCorSubOption = results.response.entity;
-        if (session.dialogData.PayCorSubOption == "My Balance") {
+        if (session.dialogData.PayCorSubOption == "PTO Balance") {
             session.beginDialog('getMyBalanceOptions');
         }
         if (session.dialogData.PayCorSubOption == "Create Time Off") {
             session.endConversation(`Please click on below link Record Absence:<br\>[Record Absence](http://localhost/absencemanagement/managetimeoff.html?screen=accrualactivity&clientId=${clientId}&empid=${employeeId})`)
         }
 
-        if (session.dialogData.PayCorSubOption == "My Schedule Hours") {
+        if (session.dialogData.PayCorSubOption == "Schedule Hours") {
             session.beginDialog('getMyScheduleHoursOptions');
         }
         if (session.dialogData.PayCorSubOption == "Time Off Details") {
             session.beginDialog('getTimeOffDetailsOptions');
         }
-        if (session.dialogData.PayCorSubOption == "My Time Card details") {
+        if (session.dialogData.PayCorSubOption == "Time Card details") {
             session.beginDialog('getMyTimeCardDetailsOptions');
         }
         if (session.dialogData.PayCorSubOption == "Exception Details") {

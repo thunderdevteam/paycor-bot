@@ -42,6 +42,8 @@ var getTimeCardDetails = (clientId, EmployeeId, date, callback) => {
 }
 
 var getHolidays = (clientId, EmployeeId, startDate, endDate, callback) => {
+    var u = `http://localhost/Time/api/Schedule/GetScheduleHoursForEmployee?clientId=${clientId}&employeeUid=${EmployeeId}&startDate=${startDate}&endDate=${endDate}&api_key=Schedule`
+    console.log(u);
     request({
         method: 'GET',
         url: `http://localhost/Time/api/Schedule/GetScheduleHoursForEmployee?clientId=${clientId}&employeeUid=${EmployeeId}&startDate=${startDate}&endDate=${endDate}&api_key=Schedule`,
@@ -51,6 +53,7 @@ var getHolidays = (clientId, EmployeeId, startDate, endDate, callback) => {
         }
     }, function(error, res, body){
         callback(body);
+        console.log(body);
     }); 
 }
 var getTimeOffDetails = (clientId, EmployeeId, startDate, endDate, callback) => {
