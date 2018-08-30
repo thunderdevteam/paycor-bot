@@ -37,7 +37,7 @@ var employeeId;
 server.post('/api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        builder.Prompts.text(session, "Hi, Welcome to Paycor Bot.<br />Please provide ClientId, EmployeeId before proceed further(eg clientId,EmployeeId)");
+        builder.Prompts.text(session, "Hi, Welcome to Paycor Bot.<br />Please provide ClientId, EmployeeId... ");
     },
     function (session, results) {
         var resp = results.response.split(',');
@@ -78,13 +78,6 @@ var bot = new builder.UniversalBot(connector, [
         if (session.dialogData.PayCorSubOption == "Exception Details") {
             session.beginDialog('getMyExceptionDetailsOptions');
         }
-        // timeOffRequestAPI.getData(function(data) {
-        //     let balances = JSON.parse(data);
-        //     for(let item of balances.balances){
-        //         session.send(item.benefitCode + ' - ' + item.availableBalance);
-        //     }
-        // });
-        // session.endDialog();
     }
 
 ]).set('storage', inMemoryStorage);
@@ -112,7 +105,7 @@ bot.dialog('getPayCorOptions', [
 ]);
 bot.dialog('getAbsenceManagementOptions', [
     function (session) {
-        builder.Prompts.choice(session, "Please select the app below.?", absenceManagementOptions, { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "Please select ....", absenceManagementOptions, { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.endDialogWithResult(results);
@@ -120,7 +113,7 @@ bot.dialog('getAbsenceManagementOptions', [
 ]);
 bot.dialog('getTimeCardOptions', [
     function (session) {
-        builder.Prompts.choice(session, "Please select the app below.?", timeCardOptions, { listStyle: builder.ListStyle.button });
+        builder.Prompts.choice(session, "Please select ....", timeCardOptions, { listStyle: builder.ListStyle.button });
     },
     function (session, results) {
         session.endDialogWithResult(results);
@@ -128,10 +121,20 @@ bot.dialog('getTimeCardOptions', [
 ]);
 bot.dialog('getHolidayDetailsOptions', [
     function (session) {
-        builder.Prompts.time(session, "Please provide date(e.g.: June 6th)?");
-    },
-    function (session, results) {
-        session.endDialogWithResult(results);
+        timeOffRequestAPI.getHolidays(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
+            let scheduleHours = JSON.parse(data);
+            console.log(scheduleHours);
+            var msg = "Below are your Holiday Details:<br \>";
+            let maxCount = 5;
+            for (let item of scheduleHours) {
+                if (maxCount == 0)
+                    break;
+                msg = msg + "Date:" + item.DisplayDate + ",  Total Hours:8.00<br \>";
+                maxCount = maxCount - 1;
+            }
+            session.send(msg);
+        });
+        session.endConversation();
     }
 ]);
 bot.dialog('getMyBalanceOptions', [
@@ -149,11 +152,10 @@ bot.dialog('getMyBalanceOptions', [
 ]);
 bot.dialog('getMyScheduleHoursOptions', [
     function (session) {
-        session.send("getMyScheduleHoursOptions called!!");
         timeOffRequestAPI.getHolidays(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
             let scheduleHours = JSON.parse(data);
             console.log(scheduleHours);
-            var msg = "Below are your balacnce:<br \>";
+            var msg = "Below are your Schedule Hours:<br \>";
             let maxCount = 5;
             for (let item of scheduleHours) {
                 if (maxCount == 0)
@@ -209,7 +211,7 @@ bot.dialog('getMyTimeCardDetailsOptions', [
 ]);
 bot.dialog('getMyExceptionDetailsOptions', [
     function (session) {
-        session.send("getMyExceptionDetailsOptions called!!");
+        session.send("Good you dont have any exceptions!!");
         timeOffRequestAPI.getExecptions(clientId, employeeId, null, function (data) {
             //let balances = JSON.parse(data);
             console.log(data);
