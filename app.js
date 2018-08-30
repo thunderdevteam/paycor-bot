@@ -23,11 +23,13 @@ var paycorOptions = {
 
 var absenceManagementOptions = {
     "PTO Balance": {},
+    "Why Absense is not showing in Time Card?": {},
     "Schedule Hours": {},
     "Create Time Off": {},
     "Time Off Details": {}
 };
 var timeCardOptions = {
+    "What are the Privilage required to view Time card?": {},
     "Time Card details": {},
     "Exception Details": {}
 };
@@ -78,6 +80,29 @@ var bot = new builder.UniversalBot(connector, [
         if (session.dialogData.PayCorSubOption == "Exception Details") {
             session.beginDialog('getMyExceptionDetailsOptions');
         }
+        if (session.dialogData.PayCorSubOption == "What are the Privilage required to view Time card?") {
+            session.send(`Here are your Privilages you need..<br\>7979-ViewTimeCard<br/>7978-PerformTime.<br\>`)
+            session.send(`User has only:<br\>5345-ViewSchedule<br/>7978-PerformTime.<br\>`)
+            session.endConversation(`Missing Privilages are:<br\>7979-ViewTimeCard<br/>`)
+        }
+        if (session.dialogData.PayCorSubOption == "Why Absense is not showing in Time Card?") {
+            builder.Prompts.text(session,"Can you please provide Time off request ID? ")
+        }
+    },
+    function (session, results) {
+        var timeoff = results.response;
+        if (timeoff.includes("timeoffid"))  {
+            session.send(`Time Off created successfully in Absense Managment<br/> But User(12345) don't have '517-AddEditDeleteHours' privilage to update the time card.`)
+            builder.Prompts.text(session,"Do you want create bug in TFS?")
+        }
+
+    },
+    function (session, results) {
+        var timeoff = results.response;
+        if (timeoff.includes("Yes"))  {
+            session.endConversation(`Thank you so much!! Bug has been created in TFS with ID:"BUG:4324534".`)
+        }
+
     }
 
 ]).set('storage', inMemoryStorage);
@@ -121,7 +146,7 @@ bot.dialog('getTimeCardOptions', [
 ]);
 bot.dialog('getHolidayDetailsOptions', [
     function (session) {
-        timeOffRequestAPI.getHolidays(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
+        timeOffRequestAPI.getHolidays(clientId, employeeId, '08/30/2018', '09/01/2018', function (data) {
             let scheduleHours = JSON.parse(data);
             console.log(scheduleHours);
             var msg = "Below are your Holiday Details:<br \>";
@@ -129,7 +154,7 @@ bot.dialog('getHolidayDetailsOptions', [
             for (let item of scheduleHours) {
                 if (maxCount == 0)
                     break;
-                msg = msg + "Date:" + item.DisplayDate + ",  Total Hours:8.00<br \>";
+                msg = msg + "Date:" + item.StartDateTime + ",  Total Hours:8.00<br \>";
                 maxCount = maxCount - 1;
             }
             session.send(msg);
@@ -152,7 +177,7 @@ bot.dialog('getMyBalanceOptions', [
 ]);
 bot.dialog('getMyScheduleHoursOptions', [
     function (session) {
-        timeOffRequestAPI.getHolidays(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
+        timeOffRequestAPI.getHolidays(clientId, employeeId, '08/30/2018', '09/01/2018', function (data) {
             let scheduleHours = JSON.parse(data);
             console.log(scheduleHours);
             var msg = "Below are your Schedule Hours:<br \>";
@@ -160,7 +185,7 @@ bot.dialog('getMyScheduleHoursOptions', [
             for (let item of scheduleHours) {
                 if (maxCount == 0)
                     break;
-                msg = msg + "Date:" + item.DisplayDate + ",  Total Hours:7.56<br \>";
+                msg = msg + "Date:" + item.StartDateTime + ", Shift:" + item.DisplayString + " Total Hours:" + item.TotalDisplay + "<br \>";
                 maxCount = maxCount - 1;
             }
             session.send(msg);
@@ -193,11 +218,11 @@ bot.dialog('getMyTimeCardDetailsOptions', [
             let timeCardDetails = JSON.parse(data);
             var msg = "Below are your Time Card Details:<br \>";
             let maxCount = 5;
-            let timeCardDays=timeCardDetails.TimeCardDays;
+            let timeCardDays = timeCardDetails.TimeCardDays;
             console.log(timeCardDays);
             for (let item of timeCardDays) {
-                 if (item.DisplayDate == '08/29/2018') {
-                     let punchPairList=item.PunchPairList[0];
+                if (item.DisplayDate == '08/29/2018') {
+                    let punchPairList = item.PunchPairList[0];
                     if (maxCount == 0)
                         break;
                     msg = msg + "Display Date:" + item.DisplayDate + ", InPunch : " + punchPairList.InPunchDateTime + ",  OutPunch:" + punchPairList.OutPunchDateTime + ", Total Hours:" + punchPairList.Hours[0].TotalString + "<br \>";

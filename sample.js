@@ -1,10 +1,12 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var timeOffRequestAPI = require('./api/timeOffRequest');
 var inMemoryStorage = new builder.MemoryBotStorage();
+
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+    console.log('%s listening to %s', server.name, server.url);
 });
 
 // Create chat connector for communicating with the Bot Framework Service
@@ -13,35 +15,215 @@ var connector = new builder.ChatConnector({
     appPassword: process.env.MicrosoftAppPassword
 });
 
+var paycorOptions = {
+    "Absence Management": {},
+    "Time Card": {},
+    "Holiday Details": {}
+};
+
+var absenceManagementOptions = {
+    "My Balance": {},
+    "My Schedule Hours": {},
+    "Create Time Off": {},
+    "Time Off Details": {}
+};
+var timeCardOptions = {
+    "My Time Card details": {},
+    "Exception Details": {}
+};
+var clientId;
+var employeeId;
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        session.send("Welcome to the dinner reservation.");
-        builder.Prompts.time(session, "Please provide a reservation date and time (e.g.: June 6th at 5pm)");
+        builder.Prompts.text(session, "Hi, Welcome to Paycor Bot.<br />Please provide ClientId, EmployeeId before proceed further(eg clientId,EmployeeId)");
     },
     function (session, results) {
-        session.dialogData.reservationDate = builder.EntityRecognizer.resolveTime([results.response]);
-        builder.Prompts.text(session, "How many people are in your party?");
+        var resp = results.response.split(',');
+        clientId = resp[0];
+        employeeId = resp[1];
+        session.beginDialog('getPayCorOptions');
     },
     function (session, results) {
-        session.dialogData.partySize = results.response;
-        builder.Prompts.text(session, "Whose name will this reservation be under?");
+        session.dialogData.PayCorOption = results.response.entity;
+        if (session.dialogData.PayCorOption == "Absence Management") {
+            session.beginDialog('getAbsenceManagementOptions');
+        }
+        if (session.dialogData.PayCorOption == "Time Card") {
+            session.beginDialog('getTimeCardOptions');
+        }
+        if (session.dialogData.PayCorOption == "Holiday Details") {
+            session.beginDialog('getHolidayDetailsOptions');
+        }
     },
     function (session, results) {
-        session.dialogData.reservationName = results.response;
+        session.dialogData.PayCorSubOption = results.response.entity;
+        if (session.dialogData.PayCorSubOption == "My Balance") {
+            session.beginDialog('getMyBalanceOptions');
+        }
+        if (session.dialogData.PayCorSubOption == "Create Time Off") {
+            session.endConversation(`Please click on below link Record Absence:<br\>[Record Absence](http://localhost/absencemanagement/managetimeoff.html?screen=accrualactivity&clientId=${clientId}&empid=${employeeId})`)
+        }
 
-        // Process request and display reservation details
-        session.send(`Reservation confirmed. Reservation details: <br/>Date/Time: ${session.dialogData.reservationDate} <br/>Party size: ${session.dialogData.partySize} <br/>Reservation name: ${session.dialogData.reservationName}`);
-        session.endDialog();
+        if (session.dialogData.PayCorSubOption == "My Schedule Hours") {
+            session.beginDialog('getMyScheduleHoursOptions');
+        }
+        if (session.dialogData.PayCorSubOption == "Time Off Details") {
+            session.beginDialog('getTimeOffDetailsOptions');
+        }
+        if (session.dialogData.PayCorSubOption == "My Time Card details") {
+            session.beginDialog('getMyTimeCardDetailsOptions');
+        }
+        if (session.dialogData.PayCorSubOption == "Exception Details") {
+            session.beginDialog('getMyExceptionDetailsOptions');
+        }
+        // timeOffRequestAPI.getData(function(data) {
+        //     let balances = JSON.parse(data);
+        //     for(let item of balances.balances){
+        //         session.send(item.benefitCode + ' - ' + item.availableBalance);
+        //     }
+        // });
+        // session.endDialog();
     }
+
 ]).set('storage', inMemoryStorage);
+/** Global help*  */
+bot.dialog('help', function (session, args, next) {
+    session.endConversation("Please say 'next' to go to Main Options..");
+})
+    .triggerAction({
+        matches: /^help$/i,
+        // onSelectAction: (session, args, next) => {
+        //     // Add the help dialog to the dialog stack 
+        //     // (override the default behavior of replacing the stack)
+        //     session.beginDialog(args.action, args);
+        // }
+    });
+/********* */
+
+bot.dialog('getPayCorOptions', [
+    function (session) {
+        builder.Prompts.choice(session, "I can help you on below options!! Please select any...", paycorOptions, { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.endDialogWithResult(results);
+    }
+]);
+bot.dialog('getAbsenceManagementOptions', [
+    function (session) {
+        builder.Prompts.choice(session, "Please select the app below.?", absenceManagementOptions, { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.endDialogWithResult(results);
+    }
+]);
+bot.dialog('getTimeCardOptions', [
+    function (session) {
+        builder.Prompts.choice(session, "Please select the app below.?", timeCardOptions, { listStyle: builder.ListStyle.button });
+    },
+    function (session, results) {
+        session.endDialogWithResult(results);
+    }
+]);
+bot.dialog('getHolidayDetailsOptions', [
+    function (session) {
+        builder.Prompts.time(session, "Please provide date(e.g.: June 6th)?");
+    },
+    function (session, results) {
+        session.endDialogWithResult(results);
+    }
+]);
+bot.dialog('getMyBalanceOptions', [
+    function (session) {
+        timeOffRequestAPI.getData(clientId, employeeId, function (data) {
+            let balances = JSON.parse(data);
+            var msg = "Below are your balacnce:<br \>";
+            for (let item of balances.balances) {
+                msg = msg + item.benefitCode + ' - ' + item.availableBalance + "<br \>";
+            }
+            session.send(msg);
+        });
+        session.endConversation();
+    }
+]);
+bot.dialog('getMyScheduleHoursOptions', [
+    function (session) {
+        session.send("getMyScheduleHoursOptions called!!");
+        timeOffRequestAPI.getHolidays(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
+            let scheduleHours = JSON.parse(data);
+            console.log(scheduleHours);
+            var msg = "Below are your balacnce:<br \>";
+            let maxCount = 5;
+            for (let item of scheduleHours) {
+                if (maxCount == 0)
+                    break;
+                msg = msg + "Date:" + item.DisplayDate + ",  Total Hours:7.56<br \>";
+                maxCount = maxCount - 1;
+            }
+            session.send(msg);
+        });
+        session.endConversation();
+    }
+]);
+bot.dialog('getTimeOffDetailsOptions', [
+    function (session) {
+        timeOffRequestAPI.getTimeOffDetails(clientId, employeeId, '07/01/2018', '09/01/2018', function (data) {
+            let TimeOffDetails = JSON.parse(data);
+            var msg = "Below are your Time Off Details:<br \>";
+            let maxCount = 5;
+            for (let item of TimeOffDetails) {
+                if (maxCount == 0)
+                    break;
+                msg = msg + "Time Off From:" + item.fromDate + " To: " + item.toDate + ",  Total Hours:" + item.totalHours + ", benefitCode:" + item.benefitCode + "<br \>";
+                maxCount = maxCount - 1;
+            }
+            session.send(msg);
+        });
+        session.endConversation();
+    }
+]);
+bot.dialog('getMyTimeCardDetailsOptions', [
+    function (session) {
+        timeOffRequestAPI.getTimeCardDetails(clientId, employeeId, '08/29/2018', function (data) {
+
+            console.log(data);
+            let timeCardDetails = JSON.parse(data);
+            var msg = "Below are your Time Card Details:<br \>";
+            let maxCount = 5;
+            let timeCardDays=timeCardDetails.TimeCardDays;
+            console.log(timeCardDays);
+            for (let item of timeCardDays) {
+                 if (item.DisplayDate == '08/29/2018') {
+                     let punchPairList=item.PunchPairList[0];
+                    if (maxCount == 0)
+                        break;
+                    msg = msg + "Display Date:" + item.DisplayDate + ", InPunch : " + punchPairList.InPunchDateTime + ",  OutPunch:" + punchPairList.OutPunchDateTime + ", Total Hours:" + punchPairList.Hours[0].TotalString + "<br \>";
+                    maxCount = maxCount - 1;
+                }
+            }
+            session.send(msg);
+        });
+        session.endConversation();
+    }
+]);
+bot.dialog('getMyExceptionDetailsOptions', [
+    function (session) {
+        session.send("getMyExceptionDetailsOptions called!!");
+        timeOffRequestAPI.getExecptions(clientId, employeeId, null, function (data) {
+            //let balances = JSON.parse(data);
+            console.log(data);
+
+        });
+        session.endConversation();
+    }
+]);
 
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
 // var bot = new builder.UniversalBot(connector, [
 //     function (session) {
 //         session.send("You said: %s", session.message.text); 
-           
+
 //     }
 // ]).set('storage', inMemoryStorage); // Register in-memory storage 
 
@@ -211,4 +393,4 @@ bot.dialog('askForReserverName', [
         session.endDialogWithResult(results);
     }
 ]);
-*/ 
+*/
